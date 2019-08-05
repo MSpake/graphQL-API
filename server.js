@@ -51,14 +51,15 @@ async function getOrders() {
   return orders;
 }
 
-function createNewOrder(args) {
-  console.log(args);
+async function createNewOrder(args) {
+  const { description, total } = args.input;
+  const orderNumber = uuid();
+  const balanceDue = total;
+
+  const result =  await client.query(SQL.insertOrder, [orderNumber, description, total, balanceDue]);
+  return result.rows[0];
 }
 /*
-    input newOrder {
-      description: String
-      total: Float
-    }
     input newPayment {
       order_number: String!
       amount: Float
