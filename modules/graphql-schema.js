@@ -6,6 +6,7 @@ const { buildSchema } = require('graphql');
 const schema = buildSchema(`
     type Query {
       getOrders: [Order]
+      getSingleOrder(order_number: String!): Order
     },
     type Mutation {
       createNewOrder(input: newOrder): Order
@@ -17,7 +18,7 @@ const schema = buildSchema(`
     }
     input newPayment {
       order_number: String!
-      amount: Float
+      amount: Float!
       note: String
     }
     type Order {

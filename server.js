@@ -23,6 +23,7 @@ const app = express();
 
 const root = {
   getOrders: getOrders,
+  getSingleOrder: getSingleOrder,
   createNewOrder: createNewOrder,
   createNewPayment: createNewPayment,
 }
@@ -51,6 +52,23 @@ async function getOrders() {
   return orders;
 }
 
+async function getSingleOrder(args) {
+  const { order_number } = args;
+  console.log(order_number);
+  const orderResult = await client.query(SQL.getSingleOrder, [order_number]);
+
+  const paymentResults = await client.query(SQL.getPaymentsByOrderNumber, [order_number]);
+
+  const payments = [...paymentResults.rows];
+  const order = {...orderResult.rows[0]};
+  console.log(order);
+
+  order.payments_applied = payments;
+
+
+  return order;
+}
+
 async function createNewOrder(args) {
   const { description, total } = args.input;
   const orderNumber = uuid();
@@ -59,15 +77,32 @@ async function createNewOrder(args) {
   const result =  await client.query(SQL.insertOrder, [orderNumber, description, total, balanceDue]);
   return result.rows[0];
 }
-/*
-    input newPayment {
-      order_number: String!
-      amount: Float
-      note: String
-    }
-*/
-function createNewPayment(args) {
 
+async function createNewPayment(args) {
+  const { order_number, amount } = args.input;
+  let note = args.input.note || '';
+  const appliedAt = new Date(Date.now()).toString();
+
+  const newBalanceDue = await updateBalanceDue(order_number, amount);
+
+  console.log(newBalanceDue);
+
+  if(newBalanceDue < 0) note = note + ' Over payed, reimbursement required.';
+
+  const result = await client.query(SQL.insertPayment, [order_number, amount, appliedAt, note])
+  const newPayment = result.rows[0];
+
+  return newPayment;
+}
+
+async function updateBalanceDue(order_number, amount) {
+  const result = await client.query(SQL.getBalanceDue, [order_number]);
+  let newBalance = result.rows[0].balance_due;
+  
+  newBalance = newBalance - amount;
+  await client.query(SQL.updateBalanceDue, [newBalance, order_number]);
+
+  return newBalance;
 }
 
 //=====================================
