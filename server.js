@@ -17,6 +17,7 @@ const schema = buildSchema(`
         description: String
         total: Float
         balanceDue: Float
+        paymentsApplied: [Payment]
     },
     type Payment {
       id: Int
@@ -40,7 +41,12 @@ app.use('/', express_graphql({
 
 function getOrders(args) {
   //connect to database
-  return testData;
+  const orders = testData.orders;
+  const payments = testData.payments;
+  orders.forEach( order => {
+    order.paymentsApplied = payments.filter( payment => payment.orderId === order.id)
+  })
+  return orders;
 }
 
 
