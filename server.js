@@ -4,6 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const express_graphql = require('express-graphql');
 const pg = require('pg');
+const uuid = require('uuid/v1');
 
 const schema = require('./modules/graphql-schema');
 const SQL = require('./modules/sql-commands.js');
@@ -21,7 +22,9 @@ const app = express();
 //=====================================
 
 const root = {
-  orders: getOrders,
+  getOrders: getOrders,
+  createNewOrder: createNewOrder,
+  createNewPayment: createNewPayment,
 }
 
 //=====================================
@@ -46,6 +49,24 @@ async function getOrders() {
   })
 
   return orders;
+}
+
+function createNewOrder(args) {
+  console.log(args);
+}
+/*
+    input newOrder {
+      description: String
+      total: Float
+    }
+    input newPayment {
+      order_number: String!
+      amount: Float
+      note: String
+    }
+*/
+function createNewPayment(args) {
+
 }
 
 //=====================================
