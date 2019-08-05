@@ -54,14 +54,12 @@ async function getOrders() {
 
 async function getSingleOrder(args) {
   const { order_number } = args;
-  console.log(order_number);
   const orderResult = await client.query(SQL.getSingleOrder, [order_number]);
 
   const paymentResults = await client.query(SQL.getPaymentsByOrderNumber, [order_number]);
 
   const payments = [...paymentResults.rows];
   const order = {...orderResult.rows[0]};
-  console.log(order);
 
   order.payments_applied = payments;
 
@@ -83,16 +81,20 @@ async function createNewPayment(args) {
   let note = args.input.note || '';
   const appliedAt = new Date(Date.now()).toString();
 
-  const newBalanceDue = await updateBalanceDue(order_number, amount);
+  const duplicatePayment = await checkForDuplicatePayment(order_number, amount, appliedAt);
 
-  console.log(newBalanceDue);
-
-  if(newBalanceDue < 0) note = note + ' Over payed, reimbursement required.';
-
-  const result = await client.query(SQL.insertPayment, [order_number, amount, appliedAt, note])
-  const newPayment = result.rows[0];
-
-  return newPayment;
+  if(duplicatePayment) {
+    throw new Error('Duplicate payment detected. If you intended to make a second payment, please wait a few minutes and try again. Thank you.');
+  } else {
+    const newBalanceDue = await updateBalanceDue(order_number, amount);
+  
+    if(newBalanceDue < 0) note = note + ' Over payed, reimbursement required.';
+  
+    const result = await client.query(SQL.insertPayment, [order_number, amount, appliedAt, note])
+    const newPayment = result.rows[0];
+  
+    return newPayment;
+  }
 }
 
 async function updateBalanceDue(order_number, amount) {
@@ -103,6 +105,20 @@ async function updateBalanceDue(order_number, amount) {
   await client.query(SQL.updateBalanceDue, [newBalance, order_number]);
 
   return newBalance;
+}
+
+async function checkForDuplicatePayment(orderNumber, amount, appliedAt) {
+  const results = await client.query(SQL.getPaymentsByOrderNumber, [orderNumber]);
+  if(results.rows.length > 0) {
+    const lastPayment = results.rows[results.rows.length - 1];
+    
+    const difference = (new Date(appliedAt).getTime()) - (new Date(lastPayment.applied_at).getTime());
+
+    if(lastPayment.amount === amount && difference < process.env.DUPLICATES_CHECK_TIME_DELAY) {
+      return true;
+    }
+    else return false;
+  }
 }
 
 //=====================================
