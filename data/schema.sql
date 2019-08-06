@@ -21,28 +21,28 @@ INSERT INTO orders (order_number, total, balance_due, description) VALUES (
   'a2e7cb2e-b797-11e9-a2a3-2a2ae2dbcce4',
   100.00,
   50.00,
-  'First order'
+  'Microwave'
 );
 
 INSERT INTO orders (order_number, total, balance_due, description) VALUES (
   'a2e7cdea-b797-11e9-a2a3-2a2ae2dbcce4',
   1200.00,
   1000.00,
-  'Second order'
+  'Couch'
 );
 
 INSERT INTO orders (order_number, total, balance_due, description) VALUES (
   'a2e7cf3e-b797-11e9-a2a3-2a2ae2dbcce4',
   20.00,
   0.00,
-  'Third order'
+  'Silverware Set'
 );
 
 INSERT INTO orders (order_number, total, balance_due, description) VALUES (
   'a2e7d1aa-b797-11e9-a2a3-2a2ae2dbcce4',
   90.50,
   57.00,
-  'Fouth order'
+  'Toaster'
 );
 
 INSERT INTO payments (order_number, amount, applied_at) VALUES (
